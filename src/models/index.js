@@ -19,6 +19,9 @@ const db = {
 };
 
 db.User = require('./user')(sequelize, DataTypes);
+db.Collection = require('./collection')(sequelize, DataTypes);
+db.Feed = require('./feed')(sequelize, DataTypes);
+db.Article = require('./article')(sequelize, DataTypes);
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName] && db[modelName].associate) {
