@@ -9,8 +9,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Bienvenue sur le backend RSS 🚀" });
 });
 
-// Lancer le serveur
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-});
+app.use('/api/auth', require('./routes/auth'));
+
+module.exports = app;
