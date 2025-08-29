@@ -1,4 +1,5 @@
 const { Feed, Collection } = require('../models');
+const { rescheduleFeed } = require('../services/rssScheduler');
 
 // Créer un feed
 exports.createFeed = async (req, res) => {
@@ -55,28 +56,31 @@ exports.getFeedById = async (req, res) => {
 
 // Mettre à jour un feed
 exports.updateFeed = async (req, res) => {
-  try {
-    const feed = await Feed.findByPk(req.params.id);
-    if (!feed) return res.status(404).json({ message: 'Feed non trouvé' });
-
-    const collection = await Collection.findByPk(feed.collectionId);
-    if (collection.creatorId !== req.user.id) return res.status(403).json({ message: 'Accès refusé' });
-
-    const { title, url, description, categories, updateFrequency, status } = req.body;
-    if (title) feed.title = title;
-    if (url) feed.url = url;
-    if (description) feed.description = description;
-    if (categories) feed.categories = categories;
-    if (updateFrequency) feed.updateFrequency = updateFrequency;
-    if (status) feed.status = status;
-
-    await feed.save();
-    res.json(feed);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
-  }
-};
+    try {
+      const feed = await Feed.findByPk(req.params.id);
+      if (!feed) return res.status(404).json({ message: 'Feed non trouvé' });
+  
+      const collection = await Collection.findByPk(feed.collectionId);
+      if (collection.creatorId !== req.user.id) return res.status(403).json({ message: 'Accès refusé' });
+  
+      const { title, url, description, categories, updateFrequency, status } = req.body;
+      if (title) feed.title = title;
+      if (url) feed.url = url;
+      if (description) feed.description = description;
+      if (Array.isArray(categories)) feed.categories = categories;
+      if (updateFrequency) feed.updateFrequency = updateFrequency;
+      if (status) feed.status = status;
+  
+      await feed.save();
+  
+      await rescheduleFeed(feed.id);
+  
+      res.json(feed);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Erreur serveur' });
+    }
+  };
 
 // Supprimer un feed
 exports.deleteFeed = async (req, res) => {

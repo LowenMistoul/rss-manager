@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 
+
 // Middleware JSON
 app.use(express.json());
 

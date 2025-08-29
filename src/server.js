@@ -1,6 +1,8 @@
 require('dotenv').config();
 const app = require('./app');
 const { sequelize } = require('./models');
+const { startRssSchedulers } = require('./services/rssScheduler');
+//const { startCron } = require('./cron/fetchCron');
 
 const PORT = process.env.PORT || 3000;
 
@@ -13,6 +15,7 @@ const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
       console.log(`Server listening on http://localhost:${PORT}`);
     });
+    await startRssSchedulers();
   } catch (err) {
     console.error('Unable to start server:', err);
     process.exit(1);
