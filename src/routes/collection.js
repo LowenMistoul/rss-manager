@@ -12,4 +12,5 @@ router.get('/:id', collectionController.getCollectionById);
 router.put('/:id', collectionController.updateCollection);
 router.delete('/:id', collectionController.deleteCollection);
 
+
 module.exports = router;

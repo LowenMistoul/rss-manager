@@ -30,9 +30,12 @@ module.exports = (sequelize, DataTypes) => {
     return bcrypt.compare(plain, this.password);
   };
 
-//   User.associate = function (models) {
-
-//   };
+  User.associate = function (models) {
+    User.hasMany(models.CollectionMember, {
+      foreignKey: "userId",
+      as: "memberships",
+    });
+  };  
 
   return User;
 };

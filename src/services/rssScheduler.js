@@ -10,7 +10,7 @@ const schedulers = new Map();
 async function startRssSchedulers() {
   const feeds = await Feed.findAll({ where: { status: 'active' } });
   for (const f of feeds) scheduleFeed(f.id, true);
-  console.log(`⏱️ Schedulers démarrés pour ${feeds.length} feed(s).`);
+  console.log(`Schedulers démarrés pour ${feeds.length} feed(s).`);
 }
 
 

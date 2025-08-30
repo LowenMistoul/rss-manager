@@ -20,6 +20,7 @@ const db = {
 
 db.User = require('./user')(sequelize, DataTypes);
 db.Collection = require('./collection')(sequelize, DataTypes);
+db.CollectionMember = require('./collectionMember')(sequelize, DataTypes);
 db.Feed = require('./feed')(sequelize, DataTypes);
 db.Article = require('./article')(sequelize, DataTypes);
 

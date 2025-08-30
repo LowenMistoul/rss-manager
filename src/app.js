@@ -15,5 +15,7 @@ app.use('/api/users', require('./routes/user'));
 app.use('/api/collections', require('./routes/collection'));
 app.use('/api/feeds', require('./routes/feed'));
 app.use('/api/articles', require('./routes/article'));
+app.use("/api/collections", require ('./routes/collectionMemberRoutes'));
+
 
 module.exports = app;
