@@ -5,6 +5,9 @@ module.exports = (sequelize, DataTypes) => {
     id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
     email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
     password: { type: DataTypes.STRING },
+    googleId: { type: DataTypes.STRING },
+    githubId: { type: DataTypes.STRING },
+    microsoftId: { type: DataTypes.STRING },
     displayName: { type: DataTypes.STRING },
     provider: { type: DataTypes.STRING, defaultValue: 'local' }
   }, {

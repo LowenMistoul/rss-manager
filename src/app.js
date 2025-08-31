@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const passport = require('./src/config/passport');
+app.use(passport.initialize());
 
 
 // Middleware JSON
