@@ -10,5 +10,6 @@ router.get('/feed/:feedId', articleController.getArticlesByFeed);
 router.get('/:id', articleController.getArticleById);
 router.put('/:id', articleController.updateArticle);
 router.delete('/:id', articleController.deleteArticle);
+router.get("/search", articleController.searchArticles);
 
 module.exports = router;

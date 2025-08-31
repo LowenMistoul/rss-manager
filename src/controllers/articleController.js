@@ -109,3 +109,59 @@ exports.deleteArticle = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
+
+// Rechercher / filtrer des articles
+exports.searchArticles = async (req, res) => {
+    try {
+      const { isRead, isFavorite, tag, source, query } = req.query;
+  
+      // Construire le where dynamique
+      const where = {};
+  
+      if (isRead !== undefined) {
+        where.isRead = isRead === "true";
+      }
+  
+      if (isFavorite !== undefined) {
+        where.isFavorite = isFavorite === "true";
+      }
+  
+      if (tag) {
+        // Postgres ARRAY contient
+        where.tags = { [Article.sequelize.Op.contains]: [tag] };
+      }
+  
+      if (query) {
+        // recherche plein texte basique avec ILIKE
+        where[Article.sequelize.Op.or] = [
+          { title: { [Article.sequelize.Op.iLike]: `%${query}%` } },
+          { contentSnippet: { [Article.sequelize.Op.iLike]: `%${query}%` } },
+        ];
+      }
+  
+      // Inclure le feed pour filtrer par source si demandé
+      const include = [
+        {
+          model: Feed,
+          as: "feed",
+          attributes: ["id", "title"],
+        },
+      ];
+  
+      if (source) {
+        include[0].where = { title: { [Article.sequelize.Op.iLike]: `%${source}%` } };
+      }
+  
+      const articles = await Article.findAll({
+        where,
+        include,
+        order: [["pubDate", "DESC"]],
+      });
+  
+      res.json(articles);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  };
+  

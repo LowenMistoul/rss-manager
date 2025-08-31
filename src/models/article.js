@@ -7,11 +7,15 @@ module.exports = (sequelize, DataTypes) => {
       pubDate: { type: DataTypes.DATE },
       contentSnippet: { type: DataTypes.TEXT },
       isRead: { type: DataTypes.BOOLEAN, defaultValue: false },
-      isFavorite: { type: DataTypes.BOOLEAN, defaultValue: false }
-    }, { tableName: 'articles', timestamps: true });
+      isFavorite: { type: DataTypes.BOOLEAN, defaultValue: false },
+      tags: { type: DataTypes.ARRAY(DataTypes.STRING), defaultValue: [] } // <-- ajouté
+    }, { 
+      tableName: 'articles', 
+      timestamps: true 
+    });
   
     Article.associate = (models) => {
-      Article.belongsTo(models.Feed, { foreignKey: 'feedId' });
+      Article.belongsTo(models.Feed, { foreignKey: 'feedId', as: 'feed' });
     };
   
     return Article;
