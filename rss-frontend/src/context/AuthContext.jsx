@@ -5,11 +5,14 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); 
 
-  // au chargement, si token présent → tente /api/users/me
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const { data } = await api.get("/api/users/me");
@@ -17,6 +20,8 @@ export function AuthProvider({ children }) {
       } catch {
         localStorage.removeItem("token");
         setUser(null);
+      } finally {
+        setLoading(false); // <-- fin du chargement
       }
     })();
   }, []);
@@ -33,7 +38,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuth: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuth: !!user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

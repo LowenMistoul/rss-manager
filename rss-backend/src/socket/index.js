@@ -1,3 +1,9 @@
+const http = require("http");
+//const { Server } = require("socket.io");
+const express = require('express');
+const app = express();
+const server = http.createServer(app);
+
 const jwt = require('jsonwebtoken');
 
 function socketInit(server, app) {
@@ -26,7 +32,7 @@ function socketInit(server, app) {
   });
 
   io.on('connection', (socket) => {
-    console.log('✅ Client connecté', socket.user);
+    console.log(' Client connecté', socket.user);
     socket.on('collection:join', (collectionId) => {
       socket.join(`collection:${collectionId}`);
       console.log(`User ${socket.user.id} joined collection ${collectionId}`);

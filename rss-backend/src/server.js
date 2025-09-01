@@ -16,7 +16,7 @@ socketInit(server, app);
     console.log('DB authenticated');
     await sequelize.sync({ alter: true });
     console.log('DB synced (tables created/updated)');
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`Server listening on http://localhost:${PORT}`);
     });
     await startRssSchedulers();

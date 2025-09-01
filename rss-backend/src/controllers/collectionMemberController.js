@@ -1,31 +1,48 @@
-// src/controllers/collectionMemberController.js
+const { CollectionMember, User, Collection } = require("../models");
 
 // Add a member to a collection
 const addMember = async (req, res) => {
-    try {
-      const { collectionId } = req.params;
-      const { userId, role } = req.body;
-  
-      if (!userId || !role) {
-        return res.status(400).json({ error: "userId and role are required" });
-      }
-  
-      // For now we fake persistence (later will be DB integration)
-      const newMember = {
-        id: Date.now().toString(), // mock id
-        collectionId,
-        userId,
-        role,
-      };
-  
-      return res.status(201).json({
-        message: "Member added successfully",
-        member: newMember,
-      });
-    } catch (err) {
-      return res.status(500).json({ error: err.message });
+  try {
+    const { collectionId } = req.params;
+    const { userId, role } = req.body;
+
+    // Vérifier que la collection existe
+    const collection = await Collection.findByPk(collectionId);
+    if (!collection) {
+      return res.status(404).json({ message: "Collection introuvable" });
     }
-  };
+
+    // Vérifier que l’utilisateur existe
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    // Vérifier qu’il n’est pas déjà membre
+    const exists = await CollectionMember.findOne({ where: { userId, collectionId } });
+    if (exists) {
+      return res.status(400).json({ message: "Cet utilisateur est déjà membre" });
+    }
+
+    // Créer le membership
+    const membership = await CollectionMember.create({
+      userId,
+      collectionId,
+      role: role || "viewer",
+    });
+
+    // Charger le membership avec les infos User incluses
+    const fullMembership = await CollectionMember.findByPk(membership.id, {
+      include: [{ model: User, attributes: ["id", "email", "displayName"] }],
+    });
+
+    res.status(201).json(fullMembership);
+
+  } catch (err) {
+    console.error("addMember error", err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
   
   // Update a member's role
   const updateMemberRole = async (req, res) => {
@@ -33,16 +50,30 @@ const addMember = async (req, res) => {
       const { collectionId, memberId } = req.params;
       const { role } = req.body;
   
-      if (!role) {
-        return res.status(400).json({ error: "role is required" });
+      const membership = await CollectionMember.findOne({
+        where: { id: memberId, collectionId },
+      });
+  
+      if (!membership) {
+        return res.status(404).json({ message: "Membre non trouvé" });
+      }
+
+      if (membership.role === "owner" && role !== "owner") {
+        return res.status(400).json({ message: "Impossible de modifier le rôle du propriétaire" });
       }
   
-      return res.json({
-        message: "Member role updated successfully",
-        member: { id: memberId, collectionId, role },
+      membership.role = role || membership.role;
+      await membership.save();
+  
+      // recharger avec User inclus
+      const fullMembership = await CollectionMember.findByPk(membership.id, {
+        include: [{ model: User, attributes: ["id", "email", "displayName"] }],
       });
+  
+      res.json(fullMembership);
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      console.error("updateMemberRole error", err);
+      res.status(500).json({ message: "Erreur serveur" });
     }
   };
   
@@ -51,12 +82,29 @@ const addMember = async (req, res) => {
     try {
       const { collectionId, memberId } = req.params;
   
-      return res.json({
-        message: "Member removed successfully",
-        member: { id: memberId, collectionId },
+      const membership = await CollectionMember.findOne({
+        where: { id: memberId, collectionId },
+        include: [{ model: User, attributes: ["id", "email", "displayName"] }],
+      });
+  
+      if (!membership) {
+        return res.status(404).json({ message: "Membre non trouvé" });
+      }
+  
+      
+      if (membership.role === "owner") {
+        return res.status(400).json({ message: "Impossible de supprimer le propriétaire de la collection" });
+      }
+  
+      await membership.destroy();
+  
+      res.json({
+        message: "Membre supprimé",
+        removed: membership,
       });
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      console.error("removeMember error", err);
+      res.status(500).json({ message: "Erreur serveur" });
     }
   };
   
@@ -65,19 +113,24 @@ const addMember = async (req, res) => {
     try {
       const { collectionId } = req.params;
   
-      // Mock response
-      const members = [
-        { id: "1", userId: "100", role: "owner", collectionId },
-        { id: "2", userId: "101", role: "editor", collectionId },
-      ];
+      const members = await CollectionMember.findAll({
+        where: { collectionId },
+        include: [
+          {
+            model: User,
+            attributes: ["id", "email", "displayName"]
+          }
+        ]
+      });
   
-      return res.json({ members });
+      res.json(members);
     } catch (err) {
-      return res.status(500).json({ error: err.message });
+      console.error("listMembers error", err);
+      res.status(500).json({ message: "Erreur serveur" });
     }
   };
   
-  // ✅ Export all controllers properly
+  
   module.exports = {
     addMember,
     updateMemberRole,

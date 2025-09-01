@@ -25,6 +25,8 @@ app.use('/api/feeds', require('./routes/feed'));
 app.use('/api/articles', require('./routes/article'));
 app.use("/api/collections", require ('./routes/collectionMember'));
 app.use('/api/feeds', require('./routes/feedImportExport'));
+app.use("/api/collections", require("./routes/message"));
+
 
 
 

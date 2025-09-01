@@ -10,7 +10,14 @@ exports.register = async (req, res) => {
     if (existing) return res.status(400).json({ message: 'Email déjà utilisé' });
 
     const user = await User.create({ email, password, displayName });
-    res.json({ id: user.id, email: user.email, displayName: user.displayName });
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erreur serveur' });
@@ -30,7 +37,13 @@ exports.login = async (req, res) => {
   
       // Généreration de JWT
       const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-      res.json({ token, id: user.id, email: user.email, displayName: user.displayName });
+      res.json({token,
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName
+        }
+      });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: 'Erreur serveur' });

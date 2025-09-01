@@ -1,4 +1,4 @@
-const { Message } = require('../models');
+const { Message, User } = require('../models');
 const { Op } = require('sequelize');
 
 // POST /api/collections/:collectionId/messages
@@ -6,27 +6,31 @@ exports.createMessage = async (req, res) => {
   try {
     const { collectionId } = req.params;
     const { content } = req.body;
-    if (!content || !content.trim()) return res.status(400).json({ message: 'Contenu requis' });
 
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: "Contenu requis" });
+    }
+
+    // Création en DB
     const msg = await Message.create({
       collectionId,
       userId: req.user.id,
-      content: content.trim()
+      content: content.trim(),
     });
 
-    // Emettre en temps réel 
-    req.io?.to(`collection:${collectionId}`).emit('message:new', {
-      id: msg.id,
-      content: msg.content,
-      userId: msg.userId,
-      collectionId: msg.collectionId,
-      createdAt: msg.createdAt
+    // Charger avec User inclus
+    const fullMsg = await Message.findByPk(msg.id, {
+      include: [{ model: User, attributes: ["id", "email", "displayName"] }],
     });
 
-    res.status(201).json(msg);
+    // Diffuser en temps réel
+    req.io?.to(`collection:${collectionId}`).emit("message:new", fullMsg);
+
+    // Réponse HTTP enrichie
+    res.status(201).json(fullMsg);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 

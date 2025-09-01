@@ -7,18 +7,23 @@ const ctrl = require('../controllers/messageController');
 
 router.use(auth);
 
+// GET /api/collections/:collectionId/messages
 router.get('/:collectionId/messages', requireCollectionMember(), ctrl.listMessages);
+
+// POST /api/collections/:collectionId/messages
 router.post('/:collectionId/messages', requireCollectionMember(), ctrl.createMessage);
-router.use('/:collectionId/messages/:id', requireCollectionMember(), (req, res, next) => {
-  next();
-});
-router.put('/:collectionId/messages/:id',
+
+// PUT /api/collections/:collectionId/messages/:id
+router.put(
+  '/:collectionId/messages/:id',
   requireCollectionRole(['admin']),
   (req, _res, next) => { req.isModerator = true; next(); },
   ctrl.updateMessage
 );
 
-router.delete('/:collectionId/messages/:id',
+// DELETE /api/collections/:collectionId/messages/:id
+router.delete(
+  '/:collectionId/messages/:id',
   requireCollectionRole(['admin']),
   (req, _res, next) => { req.isModerator = true; next(); },
   ctrl.deleteMessage

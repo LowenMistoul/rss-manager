@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   
     Message.associate = (models) => {
       Message.belongsTo(models.Collection, { foreignKey: 'collectionId' });
-      Message.belongsTo(models.User, { foreignKey: 'userId', as: 'author' });
+      Message.belongsTo(models.User, { foreignKey: 'userId'});
     };
   
     return Message;
