@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const passport = require('./src/config/passport');
+const passport = require('./config/passport');
 app.use(passport.initialize());
 
 
@@ -17,7 +17,7 @@ app.use('/api/users', require('./routes/user'));
 app.use('/api/collections', require('./routes/collection'));
 app.use('/api/feeds', require('./routes/feed'));
 app.use('/api/articles', require('./routes/article'));
-app.use("/api/collections", require ('./routes/collectionMemberRoutes'));
+app.use("/api/collections", require ('./routes/collectionMember'));
 app.use('/api/feeds', require('./routes/feedImportExport'));
 
 

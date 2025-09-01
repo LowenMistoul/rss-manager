@@ -18,6 +18,8 @@ const db = {
   DataTypes,
 };
 
+db.Message = require('./message')(sequelize, DataTypes);
+db.ArticleComment = require('./articleComment')(sequelize, DataTypes);
 db.User = require('./user')(sequelize, DataTypes);
 db.Collection = require('./collection')(sequelize, DataTypes);
 db.CollectionMember = require('./collectionMember')(sequelize, DataTypes);
