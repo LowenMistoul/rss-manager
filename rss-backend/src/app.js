@@ -1,8 +1,14 @@
 const express = require("express");
 const app = express();
+const cors = require('cors');
 const passport = require('./config/passport');
 app.use(passport.initialize());
 
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 
 // Middleware JSON
 app.use(express.json());
