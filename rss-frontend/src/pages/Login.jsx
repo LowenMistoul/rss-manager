@@ -38,6 +38,10 @@ export default function Login() {
         />
         <button className="w-full border p-2 rounded" type="submit">Se connecter</button>
       </form>
+      <a href="http://localhost:3000/api/auth/google"
+         className="px-4 py-2 bg-red-500 text-white rounded">
+            Se connecter avec Google
+      </a>
     </div>
   );
 }

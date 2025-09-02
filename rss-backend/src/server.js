@@ -12,8 +12,14 @@ socketInit(server, app);
 
 (async () => {
   try {
+    console.log("DEBUG ENV:", {
+      DB_HOST: process.env.DB_HOST,
+      DB_USER: process.env.DB_USER,
+      DB_PASSWORD: process.env.DB_PASSWORD,
+      DB_NAME: process.env.DB_NAME
+    });  
     await sequelize.authenticate();
-    console.log('DB authenticated');
+    console.log('DB authenticated');  
     await sequelize.sync({ alter: true });
     console.log('DB synced (tables created/updated)');
     server.listen(PORT, () => {

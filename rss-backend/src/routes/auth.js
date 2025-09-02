@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken'); // ⚠️ manquant
+const jwt = require('jsonwebtoken'); 
 const auth = require('../controllers/authController');
 const passport = require('../config/passport');
 
@@ -18,14 +18,7 @@ router.get('/google/callback',
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
-    res.json({
-      token,
-      user: {
-        id: req.user.id,
-        email: req.user.email,
-        displayName: req.user.displayName
-      }
-    });
+    res.redirect(`http://localhost:5173/oauth-success?token=${token}`);
   }
 );
 

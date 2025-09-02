@@ -3,6 +3,9 @@ import { useParams } from "react-router-dom";
 import api from "../lib/axios";
 import { io } from "socket.io-client";
 import { useAuthCtx } from "../context/AuthContext";
+import { Link } from "react-router-dom";
+import ExportFeeds from "../components/ExportFeeds";
+
 
 const socket = io(import.meta.env.VITE_API_BASE_URL, {
     auth: { token: localStorage.getItem("token") },
@@ -242,6 +245,7 @@ export default function CollectionDetail() {
           {collection.description || "Pas de description"}
         </p>
       </header>
+      
 
       {/* FEEDS */}
       <section>
@@ -259,6 +263,7 @@ export default function CollectionDetail() {
               >
                 {f.url}
               </a>
+              <br/>
             </li>
           ))}
           {feeds.length === 0 && (
@@ -283,6 +288,13 @@ export default function CollectionDetail() {
           <button className="px-4 py-2 border rounded">Ajouter</button>
         </form>
       </section>
+      <br/>
+      <Link
+        to={`/collections/${collectionId}/articles`}
+        className="px-4 py-2 border rounded bg-gray-100 hover:bg-gray-200"
+        >
+            Voir les articles
+        </Link>
 
       {/* MEMBERS */}
       <section>
@@ -394,6 +406,7 @@ export default function CollectionDetail() {
             />
             <button className="px-4 py-2 border rounded">Envoyer</button>
         </form>
+        <ExportFeeds />
       </section>
     </div>
   );

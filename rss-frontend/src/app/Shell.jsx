@@ -1,5 +1,6 @@
 import { Outlet, Link } from "react-router-dom";
 import { useAuthCtx } from "../context/AuthContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function Shell() {
   const { user, logout } = useAuthCtx();
@@ -7,10 +8,10 @@ export default function Shell() {
     <div className="min-h-screen flex">
       <aside className="w-64 border-r p-4 space-y-3">
         <div className="font-bold text-xl">RSS Manager</div>
+        {/* <ThemeToggle /> */}
         <nav className="space-y-2">
           <Link to="/" className="block">Accueil</Link>
           <Link to="/collections" className="block">Collections</Link>
-          <Link to="/articles" className="block">Articles</Link>
           <Link to="/settings" className="block">Paramètres</Link>
         </nav>
       </aside>

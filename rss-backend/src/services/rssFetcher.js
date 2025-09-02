@@ -1,5 +1,5 @@
-const Parser = require('rss-parser');
-const { Feed, Article, Collection } = require('../models');
+const Parser = require("rss-parser");
+const { Feed, Article, Collection } = require("../models");
 const parser = new Parser();
 
 /**
@@ -9,10 +9,13 @@ const parser = new Parser();
 const fetchAllFeeds = async () => {
   try {
     // Récup. tous les feeds actifs
-    const feeds = await Feed.findAll({ where: { status: 'active' } });
+    const feeds = await Feed.findAll({ where: { status: "active" } });
 
     for (const feed of feeds) {
+      console.log("✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅");
+      console.log(`FEED ID ICI ${feed.id}`);
       try {
+        // Vérifier que la collection existe
         const collection = await Collection.findByPk(feed.collectionId);
         if (!collection) continue;
 
@@ -20,29 +23,45 @@ const fetchAllFeeds = async () => {
 
         for (const item of rss.items) {
           // Vérif. si article existant
-          const existing = await Article.findOne({ where: { link: item.link, feedId: feed.id } });
+          const existing = await Article.findOne({
+            where: { link: item.link, feedId: feed.id },
+          });
           if (existing) continue;
 
-          // Créer un nouvel article
-          await Article.create({
-            title: item.title || 'Sans titre',
-            link: item.link,
-            author: item.creator || item.author || 'Inconnu',
-            pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
-            contentSnippet: item.contentSnippet || item.content || '',
-            feedId: feed.id
-          });
-        }
+          // 🚨 Skip si collectionId manquant
+          if (!feed.collectionId) {
+            console.warn(
+              `Feed ${feed.id} n'a pas de collectionId, article ignoré`
+            );
+            continue;
+          }
 
+          try {
+            await Article.create({
+              title: item.title || "Sans titre",
+              link: item.link,
+              author: item.creator || item.author || "Inconnu",
+              pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
+              contentSnippet: item.contentSnippet || item.content || "",
+              feedId: feed.id,
+              collectionId: feed.collectionId, // 👈 obligatoire maintenant
+            });
+            console.log("✅ Article créé:", item.title);
+          } catch (err) {
+            console.error("❌ Erreur création article:", err.message);
+          }
+        }
       } catch (err) {
-        console.error(`Erreur lors du fetch du flux ${feed.url}:`, err.message);
+        console.error(
+          `Erreur lors du fetch du flux ${feed.url}:`,
+          err.message
+        );
       }
     }
 
-    console.log('Fetch RSS terminé ');
-
+    console.log("✅ Fetch RSS terminé ");
   } catch (err) {
-    console.error('Erreur lors de la récupération des feeds:', err);
+    console.error("Erreur lors de la récupération des feeds:", err);
   }
 };
 

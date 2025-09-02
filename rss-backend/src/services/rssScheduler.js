@@ -1,24 +1,29 @@
-const Parser = require('rss-parser');
+const Parser = require("rss-parser");
 const parser = new Parser();
 
-const { Feed, Article, Collection } = require('../models');
+const { Feed, Article, Collection } = require("../models");
 
 const HARD_FAIL_THRESHOLD = 5; 
-const schedulers = new Map();  
+const schedulers = new Map();
 
-
+/**
+ * Démarre les schedulers pour tous les feeds actifs
+ */
 async function startRssSchedulers() {
-  const feeds = await Feed.findAll({ where: { status: 'active' } });
+  const feeds = await Feed.findAll({ where: { status: "active" } });
   for (const f of feeds) scheduleFeed(f.id, true);
   console.log(`Schedulers démarrés pour ${feeds.length} feed(s).`);
 }
 
-
+/**
+ * Programme un feed avec un intervalle
+ */
 async function scheduleFeed(feedId, initial = false) {
   await stopScheduler(feedId); // évite les doublons
   const feed = await Feed.findByPk(feedId);
-  if (!feed || feed.status !== 'active') return;
+  if (!feed || feed.status !== "active") return;
 
+  // ⚡ Intervalle en minutes (par défaut = 5 min)
   const minutes = Math.max(1, feed.updateFrequency || 60);
   const intervalMs = minutes * 60 * 1000;
 
@@ -29,7 +34,7 @@ async function scheduleFeed(feedId, initial = false) {
 
   const tick = async () => {
     const fresh = await Feed.findByPk(feedId);
-    if (!fresh || fresh.status !== 'active') {
+    if (!fresh || fresh.status !== "active") {
       await stopScheduler(feedId);
       return;
     }
@@ -43,7 +48,7 @@ async function scheduleFeed(feedId, initial = false) {
     try {
       await fetchOnce(fresh);
     } catch (e) {
-      console.error(`⚠️  Tick feed ${feedId} erreur non gérée:`, e);
+      console.error(`Tick feed ${feedId} erreur non gérée:`, e);
     } finally {
       state.running = false;
       state.timeout = setTimeout(tick, intervalMs);
@@ -54,7 +59,9 @@ async function scheduleFeed(feedId, initial = false) {
   console.log(`Feed ${feed.title} planifié toutes les ${minutes} minute(s).`);
 }
 
-
+/**
+ * Arrête un scheduler
+ */
 async function stopScheduler(feedId) {
   const state = schedulers.get(feedId);
   if (state && state.timeout) {
@@ -63,15 +70,20 @@ async function stopScheduler(feedId) {
   schedulers.delete(feedId);
 }
 
-
+/**
+ * Replanifie un feed
+ */
 async function rescheduleFeed(feedId) {
   await scheduleFeed(feedId, false);
 }
 
+/**
+ * Récupère les articles d’un feed une fois
+ */
 async function fetchOnce(feed) {
   if (feed.lastFetchedAt) {
     const msSinceLast = Date.now() - new Date(feed.lastFetchedAt).getTime();
-    const minMs = Math.max(1, feed.updateFrequency || 60) * 60 * 1000 * 0.8; 
+    const minMs = Math.max(1, feed.updateFrequency || 5) * 60 * 1000 * 0.8;
     if (msSinceLast < minMs) {
       return;
     }
@@ -79,30 +91,30 @@ async function fetchOnce(feed) {
 
   try {
     const collection = await Collection.findByPk(feed.collectionId);
-    if (!collection) throw new Error('Collection introuvable pour ce feed');
+    if (!collection) throw new Error("Collection introuvable pour ce feed");
 
     const rss = await parser.parseURL(feed.url);
 
     let created = 0;
     for (const item of rss.items || []) {
-      const link = item.link || item.id || item.guid; 
-      if (!link) continue; 
+      const link = item.link || item.id || item.guid;
+      if (!link) continue;
 
       const existing = await Article.findOne({ where: { link, feedId: feed.id } });
       if (existing) continue;
 
       await Article.create({
-        title: item.title || 'Sans titre',
+        title: item.title || "Sans titre",
         link,
         author: item.creator || item.author || null,
         pubDate: item.isoDate ? new Date(item.isoDate) : (item.pubDate ? new Date(item.pubDate) : null),
-        contentSnippet: item.contentSnippet || item.content || '',
-        feedId: feed.id
+        contentSnippet: item.contentSnippet || item.content || "",
+        feedId: feed.id,
+        collectionId: feed.collectionId // ✅ FIX ajouté
       });
       created++;
     }
 
-    // reset les compteurs d'échec si succés
     await feed.update({
       lastFetchedAt: new Date(),
       failedAttempts: 0,
@@ -111,14 +123,13 @@ async function fetchOnce(feed) {
 
     console.log(`✅ ${feed.title}: ${created} nouvel(aux) article(s) enregistré(s).`);
   } catch (err) {
-    // gestion des erreurs réseau/XML
     const msg = normalizeErrorMessage(err);
     const attempts = (feed.failedAttempts || 0) + 1;
 
     const updates = { failedAttempts: attempts, lastError: msg };
 
     if (attempts >= HARD_FAIL_THRESHOLD) {
-      updates.status = 'inactive';
+      updates.status = "inactive";
       console.error(`${feed.title}: ${msg} — désactivé après ${attempts} échecs.`);
     } else {
       console.warn(`${feed.title}: ${msg} — tentative ${attempts}/${HARD_FAIL_THRESHOLD}`);
@@ -128,15 +139,17 @@ async function fetchOnce(feed) {
   }
 }
 
-
+/**
+ * Normalisation des erreurs
+ */
 function normalizeErrorMessage(err) {
-  if (!err) return 'Erreur inconnue';
+  if (!err) return "Erreur inconnue";
   const msg = String(err.message || err);
-  if (/ENOTFOUND|EAI_AGAIN/i.test(msg)) return 'DNS introuvable';
-  if (/ECONNREFUSED|ECONNRESET/i.test(msg)) return 'Connexion refusée/réinitialisée';
-  if (/ETIMEDOUT/i.test(msg)) return 'Délai de connexion dépassé';
-  if (/Status code/i.test(msg)) return msg; // ex: "Status code 404"
-  if (/Unexpected close tag|Non-whitespace before first tag|XML/i.test(msg)) return 'Flux RSS/XML invalide';
+  if (/ENOTFOUND|EAI_AGAIN/i.test(msg)) return "DNS introuvable";
+  if (/ECONNREFUSED|ECONNRESET/i.test(msg)) return "Connexion refusée/réinitialisée";
+  if (/ETIMEDOUT/i.test(msg)) return "Délai de connexion dépassé";
+  if (/Status code/i.test(msg)) return msg;
+  if (/Unexpected close tag|Non-whitespace before first tag|XML/i.test(msg)) return "Flux RSS/XML invalide";
   return msg;
 }
 

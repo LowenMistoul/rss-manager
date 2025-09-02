@@ -7,7 +7,7 @@ const ctrl = require('../controllers/articleCommentController');
 
 router.use(auth);
 
-router.get('/:articleId/comments', requireCollectionMember(), ctrl.listComments);
+router.get('/:articleId/comments', ctrl.listComments);
 router.post('/:articleId/comments', requireCollectionMember(), ctrl.createComment);
 router.put('/:articleId/comments/:id',
   requireCollectionRole(['admin']),

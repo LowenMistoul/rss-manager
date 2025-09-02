@@ -1,26 +1,27 @@
-const { Feed, Collection } = require('../models');
+const { Feed, Collection, CollectionMember } = require('../models');
 const { rescheduleFeed } = require('../services/rssScheduler');
 
 // Créer un feed
 exports.createFeed = async (req, res) => {
   try {
-    const { title, url, description, categories, updateFrequency, status, collectionId } = req.body;
-    if (!title || !url || !collectionId) return res.status(400).json({ message: 'Title, URL et collectionId requis' });
-
-    const collection = await Collection.findByPk(collectionId);
-    if (!collection) return res.status(404).json({ message: 'Collection non trouvée' });
-    if (collection.creatorId !== req.user.id) return res.status(403).json({ message: 'Accès refusé' });
+    const { title, url, description, categories, collectionId } = req.body;
 
     const feed = await Feed.create({
-      title, url, description, categories: categories || [], updateFrequency: updateFrequency || 60, status: status || 'active', collectionId
+      title,
+      url,
+      description,
+      categories,
+      collectionId,
+      userId: req.user.id, // 👈 nouvel attribut obligatoire
     });
 
     res.status(201).json(feed);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    console.error("Erreur création feed:", err);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
+
 
 // Lister tous les feeds d'une collection
 exports.getFeedsByCollection = async (req, res) => {
@@ -96,5 +97,22 @@ exports.deleteFeed = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+exports.getMyFeeds = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const feeds = await Feed.findAll({
+      where: { userId },
+      include: [{ model: Collection, attributes: ["id", "name"] }],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.json(feeds);
+  } catch (err) {
+    console.error("Erreur getMyFeeds:", err);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };

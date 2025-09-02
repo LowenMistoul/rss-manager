@@ -7,9 +7,10 @@ const ctrl = require('../controllers/feedImportExportController');
 router.use(auth);
 
 // EXPORTS
-router.get('/export.opml', ctrl.exportOPML);
-router.get('/export.json', ctrl.exportJSON);
-router.get('/export.csv', ctrl.exportCSV);
+//router.get('/export.opml', ctrl.exportOPML);
+//router.get('/export.json', ctrl.exportJSON);
+//router.get('/export.csv', ctrl.exportCSV);
+router.get("/export/:format", ctrl.exportFeeds);
 
 // IMPORT
 router.post('/import', upload.single('file'), ctrl.importFeeds);

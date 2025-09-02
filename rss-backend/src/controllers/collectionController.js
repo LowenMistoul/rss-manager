@@ -1,22 +1,29 @@
-const { Collection } = require('../models');
+const { Collection, CollectionMember } = require('../models');
 
 // Créer une collection
 exports.createCollection = async (req, res) => {
   try {
-    const { name, description, isShared } = req.body;
-    if (!name) return res.status(400).json({ message: 'Le nom de la collection est requis' });
+    const { name, description } = req.body;
+    if (!name) return res.status(400).json({ message: "Nom requis" });
 
+    // Créer la collection
     const collection = await Collection.create({
       name,
       description,
-      isShared: isShared || false,
-      creatorId: req.user.id
+      creatorId: req.user.id, // si ce champ existe
+    });
+
+    // Ajouter le créateur comme membre "owner"
+    await CollectionMember.create({
+      collectionId: collection.id,
+      userId: req.user.id,
+      role: "owner",
     });
 
     res.status(201).json(collection);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Erreur serveur' });
+    console.error("Erreur createCollection:", err);
+    res.status(500).json({ message: "Erreur serveur" });
   }
 };
 

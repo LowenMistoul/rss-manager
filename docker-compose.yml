@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15
+    command: ["postgres", "-c", "password_encryption=md5"]
+    restart: always
+    environment:
+      POSTGRES_USER: rss_user
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: rss_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./rss-backend
+    restart: always
+    environment:
+      DB_HOST: db
+      DB_USER: rss_user
+      DB_PASSWORD: password123
+      DB_NAME: rss_db
+      JWT_SECRET: supersecret
+      NODE_ENV: production
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./rss-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  db_data:
